@@ -1,0 +1,143 @@
+QPushButton {
+    font-size: 18px;
+    padding: 10px;
+    background-color: #43B581; 
+    color: white;
+    border-radius: 5px;
+}
+
+QPushButton:hover {
+    background-color: #3A9E6F;
+}
+
+QPushButton.selected {
+    background-color: #7289DA; 
+    color: white;
+}
+
+QPushButton.standard {
+    font-size: 14px;
+    padding: 8px 12px;
+    background-color: #43B581; 
+    color: white;
+    border-radius: 5px;
+    line-height: 16px
+}
+
+QPushButton.standard:hover {
+    background-color: #3A9E6F;
+}
+
+QPushButton[class="danger"] {
+    font-size: 18px;
+    height: 50px;
+    background-color: #D83C3E; 
+    color: white;
+    border: none;
+    border-radius: 5px;
+}
+
+QPushButton[class="danger"]:hover {
+    background-color: #BF3235;
+}
+
+QPushButton.sidebar {
+    font-size: 18px;
+    height: 50px;
+    background-color: #4F545C; 
+    color: white;
+    border: none;
+    border-radius: 5px;
+}
+
+QPushButton.sidebar:hover {
+    background-color: #5C636A; 
+}
+
+QPushButton.sidebar:selected {
+    background-color: #3E4349;
+    color: white;
+}
+
+QPushButton#sidebar-danger {
+    font-size: 18px;
+    height: 50px;
+    background-color: #B52B3B; 
+    color: white;
+    border: none;
+    border-radius: 5px;
+}
+
+QPushButton#sidebar-danger:hover {
+    background-color: #9E2433; 
+}
+
+QPushButton[class="nav-btn"] {
+    font-size: 18px;
+    height: 50px;
+    background-color: #4F545C; 
+    color: white;
+    border: 1px solid #000000;
+    border-radius: 5px;
+}
+
+QPushButton[class="nav-btn"]:hover {
+    background-color: #3E4349;
+}
+
+QPushButton[class="nav-btn"]:checked {
+    background-color: #7289DA; 
+    color: white;
+}
+
+QLabel {
+    font-size: 18px;
+    color: white;
+}
+
+QTableWidget {
+    font-size: 15px;
+    background-color: #323232; 
+    color: white;
+    gridline-color: #000000; 
+    border: 1px solid #000000; 
+    text-align: center;
+}
+
+QHeaderView::section {
+    font-size: 16px;
+    font-weight: bold;
+    background-color: #323232; 
+    padding: 8px;
+    text-align: center;
+    color: white;
+}
+
+QLineEdit {
+    font-size: 18px;
+    padding: 8px;
+    border: 1px solid #000000; 
+    border-radius: 5px;
+    background-color: #323232; 
+    color: white;
+}
+
+QMessageBox {
+    font-size: 18px;
+    background-color: #323232; 
+    color: white;
+}
+
+QCheckBox.standard {
+    spacing: 10px;
+    font-size: 18px;
+    color: white;
+}
+
+QCheckBox.standard::indicator {
+    width: 16px;
+    height: 16px;
+    border: 1px solid #000000; 
+    background-color: #323232; 
+    border-radius: 3px;
+}
