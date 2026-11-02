@@ -1,3 +1,4 @@
+from password_security import hash_password
 import sys
 from PyQt5.QtWidgets import (
     QApplication, QWidget, QPushButton, QVBoxLayout, QHBoxLayout, 
@@ -21,6 +22,7 @@ class AdminManagement(QWidget):
         # Admin Table
         self.admin_table = QTableWidget()
         self.admin_table.setColumnCount(12)
+        self.admin_table.hideColumn(2)
         self.admin_table.setHorizontalHeaderLabels([
             "User ID", "Username", "Password", "Email", "First Name", "Last Name",
             "Phone", "Role", "Created At", "Admin ID", "Admin Level", "Department"
@@ -60,6 +62,7 @@ class AdminManagement(QWidget):
         self.password_input.setEchoMode(QLineEdit.Password)
         self.password_input.setPlaceholderText("Password")
         self.password_input.setMinimumWidth(300)
+        self.password_input.setPlaceholderText("New password; leave blank to keep existing")
         form_layout.addRow("Password:", self.password_input)
 
         self.email_input = QLineEdit()
@@ -129,7 +132,6 @@ class AdminManagement(QWidget):
         SELECT 
             a.user_id, 
             u.username, 
-            u.password, 
             u.email, 
             u.first_name, 
             u.last_name, 
@@ -151,13 +153,7 @@ class AdminManagement(QWidget):
             self.admin_table.setItem(row_idx, 0, QTableWidgetItem(str(row["user_id"])))
             # Column 1: Username
             self.admin_table.setItem(row_idx, 1, QTableWidgetItem(row["username"]))
-            # Column 2: Password (hide with asterisks)
-            real_pw = row["password"] or "" 
-            display_pw = "*" * len(real_pw)            # Show asterisks in table
-            pw_item = QTableWidgetItem(display_pw)
-
-            pw_item.setData(Qt.UserRole, real_pw)
-            self.admin_table.setItem(row_idx, 2, pw_item)
+            self.admin_table.setItem(row_idx, 2, QTableWidgetItem("Not displayed"))
 
             # Column 3: Email
             self.admin_table.setItem(row_idx, 3, QTableWidgetItem(row["email"]))
@@ -195,10 +191,7 @@ class AdminManagement(QWidget):
 
         self.username_input.setText(self.admin_table.item(row_idx, 1).text())
 
-        # Actual password stored in UserRole
-        pw_item = self.admin_table.item(row_idx, 2)
-        raw_pw = pw_item.data(Qt.UserRole)  # The real password
-        self.password_input.setText(raw_pw)
+        self.password_input.clear()  # Blank keeps the existing password.
 
         self.email_input.setText(self.admin_table.item(row_idx, 3).text())
         self.first_name_input.setText(self.admin_table.item(row_idx, 4).text())
@@ -229,7 +222,7 @@ class AdminManagement(QWidget):
         cursor = conn.cursor(dictionary=True)
 
         username = self.username_input.text().strip()
-        password = self.password_input.text().strip()
+        password = self.password_input.text()
         email = self.email_input.text().strip()
         first_name = self.first_name_input.text().strip()
         last_name = self.last_name_input.text().strip()
@@ -244,7 +237,7 @@ class AdminManagement(QWidget):
         if self.current_admin_id:
             # Editing an existing admin
             get_current_data_query = """
-            SELECT u.username, u.password, u.email, u.first_name, u.last_name, u.phone_number, u.role, 
+            SELECT u.username, u.email, u.first_name, u.last_name, u.phone_number, u.role, 
                    a.admin_level, a.department
             FROM users u
             JOIN admins a ON u.user_id = a.user_id
@@ -269,9 +262,9 @@ class AdminManagement(QWidget):
 
             update_fields = []
             update_values = []
-            if password != current_data["password"]:
+            if password:
                 update_fields.append("u.password = %s")
-                update_values.append(password)
+                update_values.append(hash_password(password))
             if email != current_data["email"]:
                 update_fields.append("u.email = %s")
                 update_values.append(email)
@@ -308,6 +301,10 @@ class AdminManagement(QWidget):
                 cursor.close()
                 return
         else:
+            if not password:
+                QMessageBox.warning(self, "Error", "Password is required for a new account.")
+                cursor.close()
+                return
             # Creating a new admin
             check_user_query = "SELECT COUNT(*) AS count FROM users WHERE username = %s"
             cursor.execute(check_user_query, (username,))
@@ -329,7 +326,7 @@ class AdminManagement(QWidget):
             INSERT INTO users (username, password, email, first_name, last_name, phone_number, role)
             VALUES (%s, %s, %s, %s, %s, %s, %s)
             """
-            cursor.execute(user_query, (username, password, email, first_name, last_name, phone, role))
+            cursor.execute(user_query, (username, hash_password(password), email, first_name, last_name, phone, role))
             conn.commit()
 
             user_id_query = "SELECT user_id FROM users WHERE username = %s"
@@ -389,3 +386,4 @@ if __name__ == '__main__':
     window = AdminManagement()
     window.show()
     sys.exit(app.exec_())
+

@@ -1,3 +1,4 @@
+from password_security import hash_password
 import sys
 from PyQt5.QtWidgets import QApplication, QWidget, QLabel, QLineEdit, QPushButton, QVBoxLayout, QHBoxLayout, QFormLayout, QMessageBox
 from PyQt5.QtCore import Qt, pyqtSignal
@@ -86,7 +87,7 @@ class RegisterWidget(QWidget):
     def register_user(self):
         """Register a new user using the existing create_user function."""
         username = self.username_input.text().strip()
-        password = self.password_input.text().strip()
+        password = self.password_input.text()
         email = self.email_input.text().strip()
         first_name = self.first_name_input.text().strip()
         last_name = self.last_name_input.text().strip()
@@ -131,12 +132,12 @@ class RegisterWidget(QWidget):
         VALUES (%s, %s, %s, %s, %s, %s, 'customer')
         """
         try:
-            cursor.execute(query, (username, password, email, first_name, last_name, phone_number))
+            cursor.execute(query, (username, hash_password(password), email, first_name, last_name, phone_number))
             conn.commit()
             QMessageBox.information(self, "Success", "Account created successfully! Please log in.")
             self.goToLoginClicked.emit()
         except Exception as e:
-            QMessageBox.critical(self, "Database Error", str(e))
+            QMessageBox.critical(self, "Database Error", "Database operation failed.")
 
         cursor.close()
         
@@ -149,3 +150,4 @@ if __name__ == '__main__':
     register = RegisterWidget()
     register.show()
     sys.exit(app.exec_())
+
