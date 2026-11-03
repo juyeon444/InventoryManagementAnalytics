@@ -1,3 +1,4 @@
+from password_security import hash_password
 import sys
 from PyQt5.QtWidgets import (
     QApplication, QWidget, QPushButton, QVBoxLayout, QHBoxLayout,
@@ -22,6 +23,7 @@ class MyAccount(QWidget):
         # User Information Table
         self.user_table = QTableWidget()
         self.user_table.setColumnCount(7)  # Updated to 7 columns
+        self.user_table.hideColumn(2)
         self.user_table.setHorizontalHeaderLabels([
             "User ID", "Username", "Password", "Email", "First Name", "Last Name", "Phone Number"
         ])
@@ -55,6 +57,7 @@ class MyAccount(QWidget):
         self.password_input = QLineEdit()
         self.password_input.setEchoMode(QLineEdit.Password)
         self.password_input.setFixedWidth(400)
+        self.password_input.setPlaceholderText("New password; leave blank to keep existing")
         form_layout.addRow("Password:", self.password_input)
 
         self.email_input = QLineEdit()
@@ -91,7 +94,7 @@ class MyAccount(QWidget):
         cursor = conn.cursor(dictionary=True)
 
         query = """
-        SELECT user_id, username, password, email, first_name, last_name, phone_number
+        SELECT user_id, username, email, first_name, last_name, phone_number
         FROM users WHERE username = %s
         """
         cursor.execute(query, (self.username,))
@@ -103,7 +106,7 @@ class MyAccount(QWidget):
             print("[DEBUG] No user data found in database.")  # Debugging
             return
 
-        print(f"[DEBUG] Loaded user: {user}")  # Debugging
+
 
         self.user_table.setRowCount(1)
         self.current_user_id = user["user_id"]
@@ -111,7 +114,7 @@ class MyAccount(QWidget):
         user_data = [
             str(user["user_id"]),
             user["username"],
-            "*" * len(user["password"]),  # Display masked password
+            "Not displayed",
             user["email"],
             user["first_name"],
             user["last_name"],
@@ -123,9 +126,6 @@ class MyAccount(QWidget):
                 value = ""  # Handle None values to prevent issues
 
             item = QTableWidgetItem(value)
-
-            if col == 2:  # Password column: Store real password in UserRole
-                item.setData(Qt.UserRole, user["password"])
 
             self.user_table.setItem(0, col, item)
 
@@ -153,8 +153,7 @@ class MyAccount(QWidget):
                 print("[DEBUG] One or more user_table items are None.")
                 return
 
-            raw_pw = password_item.data(Qt.UserRole)
-            self.password_input.setText(raw_pw if raw_pw else "")
+            self.password_input.clear()
             self.email_input.setText(email_item.text())
             self.first_name_input.setText(first_name_item.text())
             self.last_name_input.setText(last_name_item.text())
@@ -170,7 +169,7 @@ class MyAccount(QWidget):
     def save_changes(self):
         """Save the updated user information to the database."""
         email = self.email_input.text().strip()
-        password = self.password_input.text().strip()
+        password = self.password_input.text()
         first_name = self.first_name_input.text().strip()
         last_name = self.last_name_input.text().strip()
         phone = self.phone_input.text().strip()
@@ -185,16 +184,20 @@ class MyAccount(QWidget):
         try:
             query = """
             UPDATE users
-            SET email = %s, password = %s, first_name = %s, last_name = %s, phone_number = %s
+            SET email = %s, first_name = %s, last_name = %s, phone_number = %s
             WHERE user_id = %s
             """
-            cursor.execute(query, (email, password, first_name, last_name, phone, self.current_user_id))
+            values = (email, first_name, last_name, phone, self.current_user_id)
+            if password:
+                query = query.replace("SET email = %s,", "SET password = %s, email = %s,")
+                values = (hash_password(password),) + values
+            cursor.execute(query, values)
             conn.commit()
             QMessageBox.information(self, "Success", "User details updated successfully.")
             self.load_user_info()  # Reload table with updated data
             self.clear_fields()    # Clear the form fields
         except Exception as e:
-            QMessageBox.critical(self, "Database Error", f"Failed to update user details: {e}")
+            QMessageBox.critical(self, "Database Error", "Failed to update user details.")
         finally:
             cursor.close()
 
@@ -248,3 +251,4 @@ if __name__ == '__main__':
     account = MyAccount("test_user")
     account.show()
     sys.exit(app.exec_())
+

@@ -88,6 +88,7 @@ class UserManagement(QWidget):
         # 8: created_at
         self.user_table = QTableWidget()
         self.user_table.setColumnCount(9)
+        self.user_table.hideColumn(2)
         self.user_table.setHorizontalHeaderLabels([
             "User ID", "Username", "Password", "Email", 
             "First Name", "Last Name", "Phone Number", "Role", "Created At"
@@ -128,7 +129,6 @@ class UserManagement(QWidget):
         SELECT 
             user_id, 
             username, 
-            password, 
             email, 
             first_name, 
             last_name, 
@@ -170,8 +170,8 @@ class UserManagement(QWidget):
             # Column 1: username
             self.user_table.setItem(row_idx, 1, QTableWidgetItem(user["username"]))
             # Column 2: password 
-            pw = user["password"] or ""
-            display_pw = "*" * len(pw)
+            pw = ""
+            display_pw = "Not displayed"
             self.user_table.setItem(row_idx, 2, QTableWidgetItem(display_pw))
             # Column 3: email
             self.user_table.setItem(row_idx, 3, QTableWidgetItem(user["email"]))
@@ -247,3 +247,4 @@ if __name__ == '__main__':
     window = UserManagement()
     window.show()
     sys.exit(app.exec_())
+

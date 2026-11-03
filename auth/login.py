@@ -1,3 +1,4 @@
+from password_security import verify_password
 import sys
 from PyQt5.QtWidgets import QApplication, QWidget, QLabel, QLineEdit, QPushButton, QVBoxLayout, QHBoxLayout, QFormLayout, QMessageBox
 from PyQt5.QtCore import Qt, pyqtSignal
@@ -79,14 +80,17 @@ class LoginWidget(QWidget):
             return
 
         cursor = conn.cursor(dictionary=True)
-        
-        query = "SELECT username, role FROM users WHERE username = %s AND password = %s"
-        cursor.execute(query, (username, password))
-        user = cursor.fetchone()
+        try:
+            query = "SELECT username, role, password FROM users WHERE username = %s"
+            cursor.execute(query, (username,))
+            user = cursor.fetchone()
+        except Exception:
+            QMessageBox.critical(self, "Database Error", "Authentication could not be completed.")
+            return
+        finally:
+            cursor.close()
 
-        cursor.close()
-
-        if user:
+        if user and verify_password(password, user["password"]):
             QMessageBox.information(self, "Success", f"Login successful! \n\n(Role: {user['role']})")
             
             self.loginSuccessful.emit(user['username'], user['role'])
@@ -104,3 +108,4 @@ if __name__ == '__main__':
     login = LoginWidget()
     login.show()
     sys.exit(app.exec_())
+
